@@ -13,7 +13,7 @@ pyxis is added as a patch on that shared kernel. Sirius should be the same: one 
 - **sirius-dtb**: `scripts/build-sirius-dtb.sh` against the tag pinned by pmaports. Artifact is `sdm710-xiaomi-sirius.dtb`.
 - **kernel**: `scripts/inject-sirius-dts.sh` copies the dts into `linux-postmarketos-qcom-sdm670`, then `pmbootstrap build` that package.
 
-`sdm710-xiaomi-sirius.dts` now has reserved-memory, UART, USB2 gadget, PM660 charger, USB-C connector, simple-framebuffer, keys, UFS, and a disabled ST FTS node. Wi-Fi and remoteproc stay off. Do not re-add Android's coarse `removed@85fc0000` hole on top of cmd-db/smem. Backup Android boot with `scripts/backup-android-boot.ps1` before flashing. Next step that needs the phone: full kernel package + flashable boot image, boot partition only.
+`sdm710-xiaomi-sirius.dts` now has reserved-memory, UART, USB2 gadget, PM660 charger, USB-C connector, simple-framebuffer, keys, UFS, PM660 haptics, a disabled ST FTS node, and a disabled Samsung EA8074 panel (1080×2244, this phone's init). The first kernel job injects the device-tree source only. The EA8074 and TAS2557 C files stay local until USB enumerates. Wi-Fi, remoteproc, MDSS, and DSI stay off. Do not re-add Android's coarse `removed@85fc0000` hole on top of cmd-db/smem. Android boot backup: `scripts/backup-android-boot.ps1`. Flash Linux with `scripts/flash-linux-boot.ps1`. Roll back with `scripts/restore-android-boot.ps1`. Do not enable the panel or flip `deviceinfo_drm` until USB enumerates.
 
 ## Local compile (WSL / Linux)
 

@@ -11,9 +11,11 @@
  * charger. The shared sdm670-mainline tree has no SMB1355 driver;
  * do not invent a node for it.
  *
- * Display: simple-framebuffer only. This unit's panel is Samsung
- * EA8074 1080x2244. The shared kernel has EA8076, not EA8074 —
- * do not bind samsung,ea8076. DRM/DSI stays off.
+ * Display: simple-framebuffer for first boot. Samsung EA8074
+ * 1080x2244 command-mode panel driver is in kernel/panel-samsung-ea8074.c
+ * (this phone's Android init, not the Mi 8 2248 notch sequence).
+ * MDSS/DSI nodes stay disabled until USB enumerates — do not bind
+ * samsung,ea8076.
  *
  * UFS uses this phone's Xiaomi 710 supplies (VCCQ2 is PM660 L8 at
  * 1.8 V, not pyxis PM660L L8 at 3.3 V). No UFS reset GPIO in the
@@ -120,6 +122,17 @@
 			linux,code = <KEY_VOLUMEUP>;
 			gpios = <&pm660l_gpios 7 GPIO_ACTIVE_LOW>;
 		};
+	};
+
+	/* Panel VCI: TLMM GPIO 5, Android disp_vci_vreg, 3.0 V. */
+	disp_vci: disp-vci-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "disp_vci";
+		regulator-min-microvolt = <3000000>;
+		regulator-max-microvolt = <3000000>;
+		gpio = <&tlmm 5 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		startup-delay-us = <10000>;
 	};
 
 	/* Touch IO: TLMM GPIO 26, Android tp_vddio_vreg. */
@@ -273,6 +286,12 @@
 			regulator-enable-ramp-delay = <250>;
 		};
 
+		vreg_l11a_1p8: ldo11 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-enable-ramp-delay = <250>;
+		};
+
 		vreg_l19a_3p3: ldo19 {
 			regulator-min-microvolt = <3000000>;
 			regulator-max-microvolt = <3312000>;
@@ -377,6 +396,10 @@
 	status = "okay";
 };
 
+&pm660_haptics {
+	status = "okay";
+};
+
 &pon_pwrkey {
 	status = "okay";
 };
@@ -413,6 +436,14 @@
 	};
 };
 
+/*
+ * Speaker: live dmesg shows TI TAS2557 at i2c 2-004c
+ * (Android &qupv3_se7_i2c, reset GPIO 95, irq GPIO 96).
+ * kernel/tas2557.c is staged into the shared kernel package.
+ * Do not add an I2C node or enable LPASS until USB works and
+ * tas2557_uCDSP.bin / tas2557_cal.bin are packaged.
+ */
+
 /* Xiaomi SDM710 common: phy L1B + L1A, VCC L4B 2.96 V, VCCQ2 L8A 1.8 V.
  * This unit's live DT has no UFS reset GPIO — do not copy pyxis GPIO 150.
  */
@@ -443,6 +474,59 @@
 	status = "disabled";
 };
 
+/*
+ * Samsung EA8074 1080x2244 command-mode. Driver lives in
+ * kernel/panel-samsung-ea8074.c (this phone's Android init).
+ * Keep MDSS / DSI / panel off until USB enumerates — turning
+ * the display subsystem on for first boot can hang.
+ * Do not bind samsung,ea8076.
+ */
+&mdss {
+	status = "disabled";
+};
+
+&mdss_dsi0 {
+	status = "disabled";
+	vdda-supply = <&vreg_l11a_1p8>;
+
+	panel@0 {
+		compatible = "samsung,ea8074";
+		reg = <0>;
+		status = "disabled";
+
+		/* Android te-gpio flag 0; reset sequence is physical <0 2>, <1 11>. */
+		te-gpios = <&tlmm 10 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&tlmm 75 GPIO_ACTIVE_LOW>;
+
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&panel_default>;
+		pinctrl-1 = <&panel_sleep>;
+
+		vddio-supply = <&vreg_l11a_1p8>;
+		vci-supply = <&disp_vci>;
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
+};
+
+&mdss_dsi0_phy {
+	status = "disabled";
+	vdds-supply = <&vreg_l1b_0p925>;
+};
+
+&mdss_mdp {
+	status = "disabled";
+};
+
 &pm660l_gpios {
 	vol_up_pin: vol-up-state {
 		pins = "gpio7";
@@ -454,6 +538,38 @@
 };
 
 &tlmm {
+	panel_default: panel-default-state {
+		te-pins {
+			pins = "gpio10";
+			function = "mdp_vsync";
+			drive-strength = <2>;
+			bias-pull-down;
+		};
+
+		reset-pins {
+			pins = "gpio75";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-disable;
+		};
+	};
+
+	panel_sleep: panel-sleep-state {
+		te-pins {
+			pins = "gpio10";
+			function = "mdp_vsync";
+			drive-strength = <2>;
+			bias-pull-down;
+		};
+
+		reset-pins {
+			pins = "gpio75";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-disable;
+		};
+	};
+
 	ts_default: ts-default-state {
 		irq-pins {
 			pins = "gpio125";

@@ -4,6 +4,8 @@ gpi
 dwc3
 dwc3_qcom
 phy_qcom_qusb2
+libcomposite
+usb_f_rndis
 qcom_pmi8998_charger
 qcom_fg
 ufs_qcom

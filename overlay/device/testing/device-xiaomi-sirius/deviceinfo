@@ -34,3 +34,7 @@ deviceinfo_flash_sparse="true"
 deviceinfo_dtb="qcom/sdm710-xiaomi-sirius"
 deviceinfo_append_dtb="true"
 deviceinfo_flash_kernel_on_update="true"
+
+# This PC is Windows. Default NCM often shows nothing useful in Device Manager
+# on the first headless boot. RNDIS is the function Windows already knows.
+deviceinfo_usb_network_function="rndis.usb0"

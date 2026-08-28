@@ -8,9 +8,9 @@ No WSL required for compile. Three workflows:
 |---|---|---|
 | **device-package** | every push | ~1–4 min |
 | **sirius-dtb** | every push | ~10–20 min |
-| **kernel** | Actions → kernel → Run workflow only | 1–3 h, 6 h cap |
+| **kernel** | Actions → kernel → Run workflow only | 1–4 h, 6 h cap |
 
-Artifacts: Actions run → **Artifacts**. The device-tree binary is real; there is no flashable boot image. See `.github/workflows/`.
+Artifacts: Actions run → **Artifacts**. The kernel job now also exports `boot.img` as `sirius-boot-img`. Flash that file onto the boot partition only. See `.github/workflows/`.
 
 ## Local Linux / WSL
 

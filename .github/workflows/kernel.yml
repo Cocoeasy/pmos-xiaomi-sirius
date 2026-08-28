@@ -1,5 +1,5 @@
-# Full linux-postmarketos-qcom-sdm670 with the sirius dtb injected.
-# Hours + large disk. Manual by default. Not a flashable boot.img.
+# Full linux-postmarketos-qcom-sdm670 with the sirius dtb injected,
+# then a boot.img. Hours + large disk. Manual by default.
 name: kernel
 
 on:
@@ -71,8 +71,8 @@ jobs:
           tar -tzf "$apk" | grep sdm710-xiaomi-sirius.dtb
           tar -xzf "$apk" -C .work/kernel-apk --wildcards '*sdm710-xiaomi-sirius.dtb'
           printf '%s\n' \
-            'Kernel apk includes the stub sirius dtb.' \
-            'Do not pmbootstrap install / flash until USB and charger nodes are filled.' \
+            'This is the kernel Alpine package, not a boot image.' \
+            'Flash the sirius-boot-img artifact, not this apk.' \
             > .work/kernel-apk/DO_NOT_FLASH.txt
 
       - name: Upload kernel apk
@@ -80,5 +80,53 @@ jobs:
         with:
           name: linux-postmarketos-qcom-sdm670-sirius
           path: .work/kernel-apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Build device package and boot image
+        run: |
+          set -eux
+          pmbootstrap config device xiaomi-sirius
+          pmbootstrap config ui none
+          pmbootstrap checksum device-xiaomi-sirius
+          pmbootstrap build device-xiaomi-sirius
+          yes "" | pmbootstrap install --password 147147 --no-recommends
+          mkdir -p .work/export .work/flash
+          pmbootstrap export .work/export
+          ls -la .work/export
+          if [ ! -f .work/export/boot.img ]; then
+            echo "pmbootstrap export did not write boot.img" >&2
+            find .work/export -type f -ls || true
+            exit 1
+          fi
+          cp -L .work/export/boot.img .work/flash/boot.img
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path(".work/flash/boot.img")
+          magic = p.read_bytes()[:8]
+          size = p.stat().st_size
+          print(f"boot.img size={size} magic={magic!r}")
+          if magic != b"ANDROID!":
+              raise SystemExit(f"boot.img magic is {magic!r}, expected ANDROID!")
+          if size > 67108864:
+              raise SystemExit("boot.img is larger than this phone's 64 MiB boot partition")
+          PY
+          printf '%s\n' \
+            'Flash ONLY boot.img onto the boot partition.' \
+            '  fastboot flash boot boot.img' \
+            'Do not flash userdata, super, system, vendor, recovery, or dtbo.' \
+            'Rollback: fastboot flash boot <android-boot-backup>/boot.img' \
+            'This public artifact uses password 147147 (postmarketOS demo).' \
+            'After ~30s the PC should see a Remote NDIS adapter.' \
+            'Phone address is 172.16.42.1 (initramfs telnet).' \
+            > .work/flash/FLASH.txt
+
+      - name: Upload boot image
+        uses: actions/upload-artifact@v5
+        with:
+          name: sirius-boot-img
+          path: |
+            .work/flash/boot.img
+            .work/flash/FLASH.txt
           if-no-files-found: error
           retention-days: 14

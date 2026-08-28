@@ -12,9 +12,9 @@ Public overlay repo. The OS is built by [pmbootstrap](https://gitlab.postmarketo
 |---|---|---|
 | **device-package** | `device-xiaomi-sirius` apk (~3 KB deviceinfo) | No |
 | **sirius-dtb** | `sdm710-xiaomi-sirius.dtb` from `kernel/sdm710-xiaomi-sirius.dts` | No |
-| **kernel** | 整颗 `linux-postmarketos-qcom-sdm670` 软件包（手动点 Run workflow） | 否（没有可刷写的启动镜像） |
+| **kernel** | 整颗内核软件包 + `sirius-boot-img`（手动点 Run workflow） | 只刷启动分区里的 `boot.img` |
 
-Download artifacts from the workflow **Artifacts** tab. The dtb/kernel jobs exist so you do not need WSL just to compile. Do **not** flash them until USB and charger nodes are filled.
+Download artifacts from the workflow **Artifacts** tab. Flash **only** `sirius-boot-img` / `boot.img`. Do not flash the kernel Alpine package or the device-tree binary by themselves. First flash is the boot partition only; userdata stays Android.
 
 Roadmap: [`docs/PLAN.md`](docs/PLAN.md).
 
@@ -32,6 +32,7 @@ Do not put vendor `*.mbn` / `bdwlan*` in this repository.
 overlay/device/testing/device-xiaomi-sirius/
 overlay/device/testing/firmware-xiaomi-sirius/   # empty on purpose
 kernel/sdm710-xiaomi-sirius.dts
+.github/workflows/kernel.yml     # manual: kernel package + boot.img
 .github/workflows/device-package.yml
 docs/PLAN.md
 docs/BUILD.md
