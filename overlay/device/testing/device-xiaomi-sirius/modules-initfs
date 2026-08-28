@@ -1,4 +1,4 @@
-# Initramfs modules for USB gadget and PM660 charge bring-up.
+# Initramfs: USB gadget, PM660 charge, UFS. Wi-Fi stays off.
 i2c_qcom_geni
 gpi
 dwc3
@@ -6,3 +6,5 @@ dwc3_qcom
 phy_qcom_qusb2
 qcom_pmi8998_charger
 qcom_fg
+ufs_qcom
+phy_qcom_qmp_ufs

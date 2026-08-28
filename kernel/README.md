@@ -13,7 +13,7 @@ pyxis is added as a patch on that shared kernel. Sirius should be the same: one 
 - **sirius-dtb**: `scripts/build-sirius-dtb.sh` against the tag pinned by pmaports. Artifact is `sdm710-xiaomi-sirius.dtb`.
 - **kernel**: `scripts/inject-sirius-dts.sh` copies the dts into `linux-postmarketos-qcom-sdm670`, then `pmbootstrap build` that package.
 
-`sdm710-xiaomi-sirius.dts` now has this-unit reserved-memory, `uart12`, USB2 gadget, PM660 charger / fuel gauge, a USB-C connector, a 1080x2244 simple-framebuffer, and the power / volume-down keys. The Samsung EA8074 panel has no driver in the shared kernel — do not bind EA8076. Still no Wi-Fi. Do not flash a boot image until USB actually enumerates on the phone.
+`sdm710-xiaomi-sirius.dts` now has reserved-memory, UART, USB2 gadget, PM660 charger, USB-C connector, simple-framebuffer, keys, ST FTS touch, and UFS. Wi-Fi supplies are written; `&wifi` and remoteproc stay disabled. EA8074 / SMB1355 / PM660 PD PHY still have no matching mainline driver. Next step that needs the phone: full kernel package + flashable boot image, boot partition only.
 
 ## Local compile (WSL / Linux)
 
