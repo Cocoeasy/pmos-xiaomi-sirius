@@ -46,8 +46,11 @@
 / {
 	model = "Xiaomi Mi 8 SE";
 	compatible = "xiaomi,sirius", "qcom,sdm710";
-	qcom,msm-id = <0x168 0>;
-	qcom,board-id = <0x20 0>;
+	/* Must match this phone's stock boot.img base DTB (ABL match),
+	 * not the live Android tree after dtbo overlays (0x168 / 0x20).
+	 */
+	qcom,msm-id = <0x150 0>;
+	qcom,board-id = <0x0 0>;
 	chassis-type = "handset";
 
 	aliases {

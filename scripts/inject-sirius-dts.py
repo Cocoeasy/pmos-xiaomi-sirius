@@ -1,16 +1,34 @@
 #!/usr/bin/env python3
-"""Add sdm710-xiaomi-sirius.dts to linux-postmarketos-qcom-sdm670 APKBUILD."""
+"""Add sdm710-xiaomi-sirius.dts and ABL dt swap to linux-postmarketos-qcom-sdm670."""
 from __future__ import annotations
 
 import pathlib
 import re
 import sys
 
-HOOK = """
+HOOK = r"""
 	# sirius overlay: board dts (stub until board nodes are filled)
 	cp "$srcdir/sdm710-xiaomi-sirius.dts" "$builddir/arch/arm64/boot/dts/qcom/"
 	if ! grep -q sdm710-xiaomi-sirius.dtb "$builddir/arch/arm64/boot/dts/qcom/Makefile"; then
-		printf '%s\\n' 'dtb-$(CONFIG_ARCH_QCOM)	+= sdm710-xiaomi-sirius.dtb' >> "$builddir/arch/arm64/boot/dts/qcom/Makefile"
+		printf '%s\n' 'dtb-$(CONFIG_ARCH_QCOM)	+= sdm710-xiaomi-sirius.dtb' >> "$builddir/arch/arm64/boot/dts/qcom/Makefile"
+	fi
+	# ABL only starts a kernel that still looks like the Android SoC tree.
+	# Embed this board's dtb and swap it in before unflatten.
+	cp "$srcdir/sirius-force-board-dt.c" "$builddir/arch/arm64/kernel/"
+	cp "$srcdir/sirius-builtin-dt.S" "$builddir/arch/arm64/kernel/"
+	km="$builddir/arch/arm64/kernel/Makefile"
+	if ! grep -q sirius-force-board-dt.o "$km"; then
+		printf '%s\n' 'obj-y += sirius-force-board-dt.o sirius-builtin-dt.o' >> "$km"
+		printf '%s\n' '$(obj)/sirius-builtin-dt.o: $(objtree)/arch/arm64/boot/dts/qcom/sdm710-xiaomi-sirius.dtb' >> "$km"
+	fi
+	sc="$builddir/arch/arm64/kernel/setup.c"
+	if ! grep -q sirius_maybe_replace_fdt "$sc"; then
+		if ! grep -q 'setup_machine_fdt(__fdt_pointer);' "$sc"; then
+			echo "setup.c: setup_machine_fdt(__fdt_pointer) not found" >&2
+			exit 1
+		fi
+		sed -i 's/setup_machine_fdt(__fdt_pointer);/setup_machine_fdt(sirius_maybe_replace_fdt(__fdt_pointer));/' "$sc"
+		sed -i '/phys_addr_t __fdt_pointer __initdata;/a phys_addr_t sirius_maybe_replace_fdt(phys_addr_t dt_phys);' "$sc"
 	fi
 """
 
@@ -28,8 +46,10 @@ def add_source(text: str, filename: str) -> str:
 
 
 def add_prepare_hook(text: str) -> str:
-    if "sirius overlay: board dts" in text:
+    if "sirius-force-board-dt.c" in text and "sirius overlay: board dts" in text:
         return text
+    if "sirius overlay: board dts" in text and "sirius-force-board-dt.c" not in text:
+        raise SystemExit("APKBUILD already has the old dts hook; refresh pmaports")
     if "default_prepare" in text:
         return text.replace("default_prepare", "default_prepare" + HOOK, 1)
     return text + "\nprepare() {\n\tdefault_prepare" + HOOK + "}\n"
@@ -37,7 +57,7 @@ def add_prepare_hook(text: str) -> str:
 
 def bump_pkgrel(text: str) -> str:
     """Make this package newer than the official binary so pmbootstrap rebuilds."""
-    if "sirius overlay: board dts" in text:
+    if "sirius-force-board-dt.c" in text:
         return text
 
     def repl(match: re.Match[str]) -> str:
@@ -56,6 +76,8 @@ def main() -> None:
     text = path.read_text(encoding="utf-8")
     text = bump_pkgrel(text)
     text = add_source(text, "sdm710-xiaomi-sirius.dts")
+    text = add_source(text, "sirius-force-board-dt.c")
+    text = add_source(text, "sirius-builtin-dt.S")
     text = add_prepare_hook(text)
     path.write_text(text, encoding="utf-8")
     print(f"patched {path}")
