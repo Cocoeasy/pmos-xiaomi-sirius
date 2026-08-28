@@ -12,7 +12,7 @@ Public overlay repo. The OS is built by [pmbootstrap](https://gitlab.postmarketo
 |---|---|---|
 | **device-package** | `device-xiaomi-sirius` apk (~3 KB deviceinfo) | No |
 | **sirius-dtb** | `sdm710-xiaomi-sirius.dtb` from the stub dts | No |
-| **kernel** | `linux-postmarketos-qcom-sdm670` apk with that dtb injected | No (`boot.img` is not built) |
+| **kernel** | 整颗 `linux-postmarketos-qcom-sdm670` 软件包（手动点 Run workflow） | 否（没有可刷写的启动镜像） |
 
 Download artifacts from the workflow **Artifacts** tab. The dtb/kernel jobs exist so you do not need WSL just to compile. Do **not** flash them until USB and charger nodes are filled.
 

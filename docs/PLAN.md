@@ -382,7 +382,7 @@ USB 共享电脑网，或暂时保留「电脑 adb/fastboot + 另一台机查资
 | 工作 | 在哪跑 | 原因 |
 |---|---|---|
 | `device-xiaomi-sirius` apk | GitHub Actions（已有） | 快、免费、验证 overlay 没跟丢 edge |
-| 内核 + dtb | **GitHub Actions**（`sirius-dtb` / `kernel`） | 无 WSL；dtb 每次 push；整核手动或改 `kernel/` 才跑 |
+| 内核 + 设备树二进制 | **GitHub Actions**（`sirius-dtb` / `kernel`） | 无 WSL；设备树二进制每次 push；整颗内核软件包只在 Actions 里手动 Run |
 | `pmbootstrap install` | 本机或以后再加 job | CI 做出内核 apk ≠ 可刷 `boot.img` |
 | 刷机、dmesg、修网 | 实机 | Actions 没有这台 8 SE |
 

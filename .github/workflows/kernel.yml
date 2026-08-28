@@ -4,13 +4,6 @@ name: kernel
 
 on:
   workflow_dispatch:
-  push:
-    branches: [master, main]
-    paths:
-      - "kernel/**"
-      - "scripts/inject-sirius-dts.*"
-      - "scripts/sync-overlay.sh"
-      - ".github/workflows/kernel.yml"
 
 concurrency:
   group: kernel-${{ github.ref }}

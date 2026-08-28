@@ -8,7 +8,7 @@ No WSL required for compile. Three workflows:
 |---|---|---|
 | **device-package** | every push | ~1–4 min |
 | **sirius-dtb** | every push | ~10–20 min |
-| **kernel** | `workflow_dispatch`, or push that touches `kernel/` / inject scripts | 1–3 h, 6 h cap |
+| **kernel** | Actions → kernel → Run workflow only | 1–3 h, 6 h cap |
 
 Artifacts: Actions run → **Artifacts**. The dtb is real but from a **stub** dts. There is no `boot.img`. See `.github/workflows/`.
 
