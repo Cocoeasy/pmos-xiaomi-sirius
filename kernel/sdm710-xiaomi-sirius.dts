@@ -36,14 +36,10 @@
 #include "pm660l.dtsi"
 
 /delete-node/ &xbl_mem;
-/delete-node/ &wlan_msa_mem;
-/delete-node/ &cdsp_mem;
-/delete-node/ &mba_region;
 /delete-node/ &adsp_mem;
 /delete-node/ &ipa_fw_mem;
 /delete-node/ &ipa_gsi_mem;
 /delete-node/ &gpu_mem;
-/delete-node/ &rmtfs_mem;
 
 / {
 	model = "Xiaomi Mi 8 SE";
@@ -135,7 +131,6 @@
 		gpio = <&tlmm 26 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 		startup-delay-us = <4000>;
-		regulator-boot-on;
 	};
 
 	vph_pwr: vph-pwr-regulator {
@@ -169,26 +164,13 @@
 			no-map;
 		};
 
-		removed_region: removed-region {
-			reg = <0 0x85fc0000 0 0x2f40000>;
-			no-map;
-		};
-
-		wlan_msa_mem: wlan-msa@93300000 {
-			reg = <0 0x93300000 0 0x100000>;
-			no-map;
-		};
-
-		cdsp_mem: cdsp@93400000 {
-			reg = <0 0x93400000 0 0x800000>;
-			no-map;
-		};
-
-		mba_region: mba@93c00000 {
-			reg = <0 0x93c00000 0 0x200000>;
-			no-map;
-		};
-
+		/*
+		 * Android's removed@85fc0000 is the same physical hole as
+		 * SoC aop / cmd-db / smem / tz (ends at 0x88f00000 = rmtfs).
+		 * Do not re-add it, and do not delete &rmtfs_mem: this
+		 * phone does not relocate rmtfs the way pyxis does.
+		 * wlan_msa / cdsp / mba already match the SoC file.
+		 */
 		adsp_mem: adsp@93e00000 {
 			reg = <0 0x93e00000 0 0x2200000>;
 			no-map;
@@ -211,6 +193,12 @@
 
 		fb_mem: framebuffer@9c000000 {
 			reg = <0 0x9c000000 0 0x2300000>;
+			no-map;
+		};
+
+		/* Live Android 2026-08-28: between splash and SoC qseecom. */
+		dfps_mem: dfps@9e300000 {
+			reg = <0 0x9e300000 0 0x100000>;
 			no-map;
 		};
 	};
@@ -398,9 +386,11 @@
 	status = "okay";
 };
 
-/* Touch: live compatible st,fts @ i2c 0xa84000 addr 0x49. */
+/* Touch: live compatible st,fts @ i2c 0xa84000 addr 0x49.
+ * Keep the bus off until USB works and st_fts_v521.ftb is packaged.
+ */
 &i2c9 {
-	status = "okay";
+	status = "disabled";
 	clock-frequency = <400000>;
 
 	touchscreen@49 {
@@ -416,6 +406,10 @@
 		avdd-supply = <&vreg_l6b_3p3>;
 		touchscreen-size-x = <1080>;
 		touchscreen-size-y = <2244>;
+		/* No panel and no st_fts_v521.ftb in the firmware package.
+		 * Probe can stall first USB bring-up. Enable after USB works.
+		 */
+		status = "disabled";
 	};
 };
 

@@ -4,7 +4,10 @@ On Windows, with the phone authorized:
 
 ```powershell
 powershell -File scripts/dump-from-phone.ps1
+powershell -File scripts/backup-android-boot.ps1
 ```
+
+The boot backup lands in `hardware/dump/` (gitignored). Restore later with `fastboot flash boot boot.img`. Do this before flashing any Linux boot.
 
 Put raw dumps in `hardware/dump/` (gitignored). Fill `hardware/NOTES.md` after a successful dump.
 

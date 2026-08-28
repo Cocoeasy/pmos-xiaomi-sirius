@@ -1,5 +1,5 @@
 # Compile sdm710-xiaomi-sirius.dtb on GitHub (no WSL).
-# This is a real dtb from the stub dts. It is not a flashable OS image.
+# Real dtb from kernel/sdm710-xiaomi-sirius.dts. Not a flashable OS image.
 name: sirius-dtb
 
 on:
@@ -44,8 +44,9 @@ jobs:
             .work/sdm710-xiaomi-sirius.dtb
           grep -F 'Xiaomi Mi 8 SE' .work/sdm710-xiaomi-sirius.decompiled.dts
           printf '%s\n' \
-            'This dtb is compiled from kernel/sdm710-xiaomi-sirius.dts (stub).' \
-            'Do not flash it as a phone OS. USB/charge/Wi-Fi nodes are not filled yet.' \
+            'This dtb is compiled from kernel/sdm710-xiaomi-sirius.dts.' \
+            'Do not flash the dtb by itself. First flash needs a full kernel package' \
+            'and a boot image. Backup Android boot first (scripts/backup-android-boot.ps1).' \
             > .work/DO_NOT_FLASH.txt
 
       - name: Upload dtb

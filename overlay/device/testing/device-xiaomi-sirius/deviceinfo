@@ -9,11 +9,15 @@ deviceinfo_year="2018"
 deviceinfo_arch="aarch64"
 
 # Device related
-deviceinfo_drm="true"
+# No DRM panel yet (EA8074 is not in the shared kernel). simple-framebuffer
+# may be blank. Do not stall initramfs waiting for a display.
+deviceinfo_drm="false"
+deviceinfo_no_framebuffer="true"
 deviceinfo_chassis="handset"
 deviceinfo_screen_width="1080"
 deviceinfo_screen_height="2244"
 deviceinfo_rootfs_image_sector_size="4096"
+deviceinfo_getty="ttyMSM0;115200"
 
 # Bootloader related (aligned with xiaomi-pyxis / SDM710)
 deviceinfo_flash_method="fastboot"

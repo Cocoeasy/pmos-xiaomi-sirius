@@ -1,4 +1,4 @@
-# Initramfs: USB gadget, PM660 charge, UFS. Wi-Fi stays off.
+# Initramfs: USB gadget, PM660 charge, UFS. Wi-Fi and touch stay off.
 i2c_qcom_geni
 gpi
 dwc3

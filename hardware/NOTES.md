@@ -12,7 +12,7 @@ Do not commit dump files. They include radio identifiers.
 | `qcom,msm-id` | `0x00000168` (360) | SDM670 编号 | |
 | `qcom,board-id` | `0x00000020` | | |
 | 屏幕 | **Samsung EA8074** 命令模式，本机 `wm size` **1080×2244**（`dsi_ss_ea8074_fhd_cmd_display:config2`） | 复位 GPIO 75，TE GPIO 10。共享内核有 EA8076 驱动、没有 EA8074，不能拿 EA8076 来绑 | 简易帧缓冲在 `0x9c000000`；显示子系统未开 |
-| 触控 | **ST FTS** `st,fts` @ `i2c 0xa84000`（主线 `i2c9`）addr 0x49，中断 GPIO 125，复位 GPIO 99，固件 `st_fts_v521.ftb` | 不要用对照机的 `edt_ft5x06`。IO 供电 GPIO 26，模拟供电 PM660L L6 | 设备树已写 |
+| 触控 | **ST FTS** `st,fts` @ `i2c 0xa84000`（主线 `i2c9`）addr 0x49，中断 GPIO 125，复位 GPIO 99，固件 `st_fts_v521.ftb` | 不要用对照机的 `edt_ft5x06`。IO 供电 GPIO 26，模拟供电 PM660L L6。Linux 固件包里还没有 `st_fts_v521.ftb`，节点和这条总线都关掉，避免第一次开机卡探测 | 设备树已写，当前关闭 |
 | 充电 | PM660 `qpnp-smb2` + 并联 **SMB1355**（`a88000.i2c` = 主线 `i2c10`）+ `qpnp,fg` | 本机 2026-08-28：`charge_full_design=3120000`，`voltage_max=4400000`，`bms` 类型 `e2_atl`，电量计截止 3400 mV，`parallel` 的 `model_name=smb1355`。主线只开 `&pm660_charger` / `&pm660_fg` / `&pm660_rradc`；共享内核没有 SMB1355 驱动，设备树里不编造该芯片节点 | 设备树已写 PM660；SMB1355 仍不能用 |
 | USB | **`a600000.dwc3`**，安卓限 USB2（`maximum-speed = high-speed`），Type-C | **没有** pyxis 那种 TLMM GPIO 38 USB-ID | `&usb_1` / `&usb_1_dwc3` `dr_mode = peripheral`，未接 extcon，也未开 `usb-role-switch`（没有 PM660 Type-C 驱动时会卡住从设备枚举） |
 | Type-C / 供电检测 | 本机 `qcom,usb-pdphy@1700`（`qcom,qpnp-pdphy`）+ `qpnp-smb2` 的 `usb-chgpth@1300`（中断名 `type-c-change`） | 供电脚：`vdd-pdphy` = PM660L L7（已有 `vreg_l7b_3p125`），`vbus`/`vconn` = `smb2-vbus`/`smb2-vconn`。本机默认接收能力 5 伏 3 安、9 伏 3 安。共享内核 `TYPEC_QCOM_PMIC` 只认 `pm8150b`，不能拿来绑 PM660 | 设备树写了 `usb-c-connector`；硅片节点不编造 |
@@ -37,6 +37,10 @@ androidboot.hwc=CN androidboot.hwversion=2.3.0
 
 本机安卓 `boot` 文件头（`mmcblk0p70`，2026-08-28）：`page_size=4096`，`kernel_addr=0x00008000`，`ramdisk_addr=0x01000000`，`tags_addr=0x00000100`。与现有 `deviceinfo_flash_*` 一致，刷第一版启动镜像前不必改偏移。
 
-保留内存与 pyxis **不完全相同**（例如 `removed_region` 长度 `0x2f40000`，mba/adsp/ipa 基址不同）。设备树必须用本机 live 值，见 `kernel/sdm710-xiaomi-sirius.dts`。
+刷 Linux 启动分区前先跑 `scripts/backup-android-boot.ps1`，把当前安卓启动镜像拷到 `hardware/dump/`（勿提交）。回来：`fastboot flash boot boot.img`。
+
+安卓那块粗粒度 `removed@85fc0000` 和芯片文件里的 aop / cmd-db / smem / tz 是同一段物理内存。设备树不再重复开一个 `removed_region`，也不再删掉 `rmtfs`，避免和命令库、共享内存打架。
+
+保留内存与对照机 **不完全相同**（mba/adsp/ipa 基址不同）。设备树必须用本机 live 值，见 `kernel/sdm710-xiaomi-sirius.dts`。
 
 参考安卓树（GPL，非本机 live 展开）：`hardware/reference/android-dts/`。

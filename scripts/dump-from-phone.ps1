@@ -37,5 +37,21 @@ Write-Host "Dumping to $out"
 & $Adb shell "ls -la /vendor/firmware /vendor/firmware/wlan/qca_cld /vendor/etc/wifi" 2>&1 | Out-File -Encoding utf8 "$out\firmware-ls.txt"
 & $Adb pull /vendor/etc/wifi/WCNSS_qcom_cfg.ini "$out\firmware-copy\WCNSS_qcom_cfg.ini"
 
-Write-Host "Done. Do not git add hardware/dump/"
+$id = & $Adb shell "su -c id"
+if ($id -match "uid=0") {
+    Write-Host "Root available; packing wlanmdsp/bdwlan/mba"
+    $sh = Join-Path $Root "scripts\pull-firmware-root.sh"
+    & $Adb push $sh /data/local/tmp/pull-firmware-root.sh | Out-Null
+    & $Adb shell "su -c 'sh /data/local/tmp/pull-firmware-root.sh'"
+    & $Adb pull /data/local/tmp/fw-wifi.tgz "$out\fw-wifi.tgz"
+    $fw = Join-Path $Root "hardware\firmware"
+    New-Item -ItemType Directory -Force -Path $fw | Out-Null
+    tar -xzf "$out\fw-wifi.tgz" -C $out
+    if (Test-Path "$out\fw-wifi") { Copy-Item -Force "$out\fw-wifi\*" $fw }
+    & $Adb shell "su -c 'rm -rf /data/local/tmp/fw-wifi /data/local/tmp/fw-wifi.tgz /data/local/tmp/pull-firmware-root.sh'" | Out-Null
+} else {
+    Write-Host "No root; skipped firmware_mnt (grant Shell in SukiSU and re-run)"
+}
+
+Write-Host "Done. Do not git add hardware/dump/ or hardware/firmware/"
 Write-Host $out
