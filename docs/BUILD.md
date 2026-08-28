@@ -2,9 +2,15 @@
 
 ## Public GitHub Actions
 
-On this public repo, **Actions → device-package** builds the device apk against pmaports edge. No WSL required for that check.
+No WSL required for compile. Three workflows:
 
-It does not build the kernel or a flashable image. See `.github/workflows/device-package.yml`.
+| Workflow | Trigger | Time |
+|---|---|---|
+| **device-package** | every push | ~1–4 min |
+| **sirius-dtb** | every push | ~10–20 min |
+| **kernel** | `workflow_dispatch`, or push that touches `kernel/` / inject scripts | 1–3 h, 6 h cap |
+
+Artifacts: Actions run → **Artifacts**. The dtb is real but from a **stub** dts. There is no `boot.img`. See `.github/workflows/`.
 
 ## Local Linux / WSL
 

@@ -382,10 +382,9 @@ USB 共享电脑网，或暂时保留「电脑 adb/fastboot + 另一台机查资
 | 工作 | 在哪跑 | 原因 |
 |---|---|---|
 | `device-xiaomi-sirius` apk | GitHub Actions（已有） | 快、免费、验证 overlay 没跟丢 edge |
-| 内核 + dtb | **先本机** | 1–3h、磁盘大 |
-| `pmbootstrap install` | 本机 | 要检查 boot.img；CI 做出也不能代替实机 |
-| 刷机、dmesg、修网 | 实机 + 本机 | Actions 没有这台 8 SE |
-| 内核 nightly CI | dts **本机编过之后** 再加 | 现在加只会超时或做出错误 dtb |
+| 内核 + dtb | **GitHub Actions**（`sirius-dtb` / `kernel`） | 无 WSL；dtb 每次 push；整核手动或改 `kernel/` 才跑 |
+| `pmbootstrap install` | 本机或以后再加 job | CI 做出内核 apk ≠ 可刷 `boot.img` |
+| 刷机、dmesg、修网 | 实机 | Actions 没有这台 8 SE |
 
 公开仓库继续禁止 blob。CI 红了先看是 pmaports 接口变了，还是 overlay 写错。
 
@@ -453,7 +452,7 @@ USB 共享电脑网，或暂时保留「电脑 adb/fastboot + 另一台机查资
 3. **对照 pyxis dts + 本机 dt，开始改 `kernel/sdm710-xiaomi-sirius.dts`**（阶段 3）。  
    在 dtb 编出来之前，不要 `pmbootstrap install`，不要刷机。
 
-CI 继续看设备包绿不绿即可；内核 job 现在不要加。
+编译走 GitHub Actions：`sirius-dtb` 每次 push；整核用 Actions → **kernel** → Run workflow。做出的是 stub dtb / 内核 apk，不要刷。
 
 ---
 

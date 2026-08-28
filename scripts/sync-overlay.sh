@@ -21,7 +21,13 @@ if [ -d "$PMAPORTS/device/testing/linux-xiaomi-sirius" ]; then
 	echo "This port uses linux-postmarketos-qcom-sdm670 plus kernel/sdm710-xiaomi-sirius.dts"
 fi
 
+if [ -f "$PMAPORTS/device/community/linux-postmarketos-qcom-sdm670/APKBUILD" ]; then
+	"$ROOT/scripts/inject-sirius-dts.sh"
+fi
+
 echo "Synced overlay into $PMAPORTS"
 echo "Next:"
 echo "  pmbootstrap checksum device-xiaomi-sirius"
 echo "  pmbootstrap build device-xiaomi-sirius"
+echo "  (kernel) pmbootstrap checksum linux-postmarketos-qcom-sdm670"
+echo "  (kernel) pmbootstrap build linux-postmarketos-qcom-sdm670"

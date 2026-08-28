@@ -1,0 +1,90 @@
+# Full linux-postmarketos-qcom-sdm670 with the sirius dtb injected.
+# Hours + large disk. Manual by default. Not a flashable boot.img.
+name: kernel
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master, main]
+    paths:
+      - "kernel/**"
+      - "scripts/inject-sirius-dts.*"
+      - "scripts/sync-overlay.sh"
+      - ".github/workflows/kernel.yml"
+
+concurrency:
+  group: kernel-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kernel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Free disk
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 8192
+          temp-reserve-mb: 1024
+          swap-size-mb: 8192
+          remove-dotnet: true
+          remove-android: true
+          remove-haskell: true
+          remove-codeql: true
+          remove-docker-images: true
+
+      - uses: actions/checkout@v5
+
+      - name: Install pmbootstrap from git
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git python3 openssl
+          git clone --depth=1 https://gitlab.postmarketos.org/postmarketOS/pmbootstrap.git
+          mkdir -p "$HOME/.local/bin"
+          ln -s "$PWD/pmbootstrap/pmbootstrap.py" "$HOME/.local/bin/pmbootstrap"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/pmbootstrap" --version
+
+      - name: Init pmaports (edge) on the big workspace disk
+        env:
+          WORK: ${{ github.workspace }}/.pmbootstrap
+        run: |
+          mkdir -p "$WORK"
+          yes "" | pmbootstrap --work "$WORK" init --shallow-initial-clone || true
+          pmbootstrap --work "$WORK" config ui none
+          pmbootstrap --work "$WORK" config device xiaomi-pyxis
+          test -d "$WORK/cache_git/pmaports/device"
+
+      - name: Inject sirius dts and build kernel
+        env:
+          WORK: ${{ github.workspace }}/.pmbootstrap
+          PMAPORTS: ${{ github.workspace }}/.pmbootstrap/cache_git/pmaports
+        run: |
+          chmod +x scripts/sync-overlay.sh scripts/inject-sirius-dts.sh
+          ./scripts/sync-overlay.sh
+          ./scripts/inject-sirius-dts.sh
+          pmbootstrap --work "$WORK" checksum linux-postmarketos-qcom-sdm670
+          pmbootstrap --work "$WORK" build linux-postmarketos-qcom-sdm670
+
+      - name: Extract sirius dtb from apk
+        env:
+          WORK: ${{ github.workspace }}/.pmbootstrap
+        run: |
+          mkdir -p .work/kernel-apk
+          apk=$(find "$WORK/packages" -name 'linux-postmarketos-qcom-sdm670-*.apk' | head -n1)
+          test -n "$apk"
+          cp "$apk" .work/kernel-apk/
+          tar -tzf "$apk" | grep sdm710-xiaomi-sirius.dtb
+          tar -xzf "$apk" -C .work/kernel-apk --wildcards '*sdm710-xiaomi-sirius.dtb'
+          printf '%s\n' \
+            'Kernel apk includes the stub sirius dtb.' \
+            'Do not pmbootstrap install / flash until USB and charger nodes are filled.' \
+            > .work/kernel-apk/DO_NOT_FLASH.txt
+
+      - name: Upload kernel apk
+        uses: actions/upload-artifact@v5
+        with:
+          name: linux-postmarketos-qcom-sdm670-sirius
+          path: .work/kernel-apk
+          if-no-files-found: error
+          retention-days: 14

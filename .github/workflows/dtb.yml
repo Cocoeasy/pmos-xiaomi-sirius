@@ -1,0 +1,60 @@
+# Compile sdm710-xiaomi-sirius.dtb on GitHub (no WSL).
+# This is a real dtb from the stub dts. It is not a flashable OS image.
+name: sirius-dtb
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: sirius-dtb-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dtb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dtb build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git make gcc flex bison libssl-dev bc \
+            device-tree-compiler gcc-aarch64-linux-gnu python3
+
+      - name: Install pmbootstrap and clone pmaports (for the pinned tag)
+        run: |
+          git clone --depth=1 https://gitlab.postmarketos.org/postmarketOS/pmbootstrap.git
+          mkdir -p "$HOME/.local/bin"
+          ln -s "$PWD/pmbootstrap/pmbootstrap.py" "$HOME/.local/bin/pmbootstrap"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          yes "" | pmbootstrap init --shallow-initial-clone || true
+          pmbootstrap config ui none
+          pmbootstrap config device xiaomi-pyxis
+          test -f "$HOME/.local/var/pmbootstrap/cache_git/pmaports/device/community/linux-postmarketos-qcom-sdm670/APKBUILD"
+
+      - name: Build sdm710-xiaomi-sirius.dtb
+        run: |
+          chmod +x scripts/build-sirius-dtb.sh
+          ./scripts/build-sirius-dtb.sh
+          dtc -I dtb -O dts -o .work/sdm710-xiaomi-sirius.decompiled.dts \
+            .work/sdm710-xiaomi-sirius.dtb
+          grep -F 'Xiaomi Mi 8 SE' .work/sdm710-xiaomi-sirius.decompiled.dts
+          printf '%s\n' \
+            'This dtb is compiled from kernel/sdm710-xiaomi-sirius.dts (stub).' \
+            'Do not flash it as a phone OS. USB/charge/Wi-Fi nodes are not filled yet.' \
+            > .work/DO_NOT_FLASH.txt
+
+      - name: Upload dtb
+        uses: actions/upload-artifact@v5
+        with:
+          name: sdm710-xiaomi-sirius-dtb
+          path: |
+            .work/sdm710-xiaomi-sirius.dtb
+            .work/sdm710-xiaomi-sirius.decompiled.dts
+            .work/DO_NOT_FLASH.txt
+          if-no-files-found: error
+          retention-days: 14
