@@ -17,7 +17,7 @@ pyxis is added as a patch on that shared kernel. Sirius should be the same: one 
 
 ## Local compile (WSL / Linux)
 
-After `scripts/sync-overlay.sh` (that now injects the dts):
+After `scripts/sync-overlay.sh` and, only when building the full kernel package, `scripts/inject-sirius-dts.sh`:
 
 ```sh
 pmbootstrap checksum linux-postmarketos-qcom-sdm670

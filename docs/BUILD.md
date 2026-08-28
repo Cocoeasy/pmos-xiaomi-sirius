@@ -10,7 +10,7 @@ No WSL required for compile. Three workflows:
 | **sirius-dtb** | every push | ~10–20 min |
 | **kernel** | Actions → kernel → Run workflow only | 1–3 h, 6 h cap |
 
-Artifacts: Actions run → **Artifacts**. The dtb is real but from a **stub** dts. There is no `boot.img`. See `.github/workflows/`.
+Artifacts: Actions run → **Artifacts**. The device-tree binary is real; there is no flashable boot image. See `.github/workflows/`.
 
 ## Local Linux / WSL
 

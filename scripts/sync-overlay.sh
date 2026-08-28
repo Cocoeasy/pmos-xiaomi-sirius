@@ -21,13 +21,14 @@ if [ -d "$PMAPORTS/device/testing/linux-xiaomi-sirius" ]; then
 	echo "This port uses linux-postmarketos-qcom-sdm670 plus kernel/sdm710-xiaomi-sirius.dts"
 fi
 
-if [ -f "$PMAPORTS/device/community/linux-postmarketos-qcom-sdm670/APKBUILD" ]; then
-	"$ROOT/scripts/inject-sirius-dts.sh"
-fi
+# Do not inject the dts here. Injection bumps the kernel package
+# version and makes a device-package build compile the whole kernel.
+# Use scripts/inject-sirius-dts.sh only for a full kernel package build.
 
 echo "Synced overlay into $PMAPORTS"
 echo "Next:"
 echo "  pmbootstrap checksum device-xiaomi-sirius"
 echo "  pmbootstrap build device-xiaomi-sirius"
-echo "  (kernel) pmbootstrap checksum linux-postmarketos-qcom-sdm670"
-echo "  (kernel) pmbootstrap build linux-postmarketos-qcom-sdm670"
+echo "  (kernel, only when needed) scripts/inject-sirius-dts.sh"
+echo "  (kernel, only when needed) pmbootstrap checksum linux-postmarketos-qcom-sdm670"
+echo "  (kernel, only when needed) pmbootstrap build linux-postmarketos-qcom-sdm670"

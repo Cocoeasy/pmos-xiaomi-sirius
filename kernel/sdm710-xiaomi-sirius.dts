@@ -63,70 +63,58 @@
 	reserved-memory {
 		#address-cells = <2>;
 		#size-cells = <2>;
-		ranges;
 
-		/* Addresses and sizes from this phone's live DT. */
-		hyp_mem: memory@85700000 {
-			reg = <0 0x85700000 0 0x600000>;
-			no-map;
-		};
-
+		/*
+		 * hyp_mem, camera_mem, and mpss already exist in sdm670.dtsi
+		 * at this phone's live addresses. Do not redeclare those
+		 * labels. Only replace nodes whose size or base differs.
+		 */
 		xbl_mem: memory@85e00000 {
 			reg = <0 0x85e00000 0 0x1c0000>;
 			no-map;
 		};
 
-		removed_region: memory@85fc0000 {
+		removed_region: removed-region {
 			reg = <0 0x85fc0000 0 0x2f40000>;
 			no-map;
 		};
 
-		camera_mem: memory@8ab00000 {
-			reg = <0 0x8ab00000 0 0x500000>;
-			no-map;
-		};
-
-		modem_mem: memory@8b000000 {
-			reg = <0 0x8b000000 0 0x7e00000>;
-			no-map;
-		};
-
-		wlan_msa_mem: memory@93300000 {
+		wlan_msa_mem: wlan-msa@93300000 {
 			reg = <0 0x93300000 0 0x100000>;
 			no-map;
 		};
 
-		cdsp_mem: memory@93400000 {
+		cdsp_mem: cdsp@93400000 {
 			reg = <0 0x93400000 0 0x800000>;
 			no-map;
 		};
 
-		mba_region: memory@93c00000 {
+		mba_region: mba@93c00000 {
 			reg = <0 0x93c00000 0 0x200000>;
 			no-map;
 		};
 
-		adsp_mem: memory@93e00000 {
+		adsp_mem: adsp@93e00000 {
 			reg = <0 0x93e00000 0 0x2200000>;
 			no-map;
 		};
 
-		ipa_fw_mem: memory@96000000 {
+		ipa_fw_mem: ipa-fw@96000000 {
 			reg = <0 0x96000000 0 0x10000>;
 			no-map;
 		};
 
-		ipa_gsi_mem: memory@96010000 {
+		ipa_gsi_mem: ipa-gsi@96010000 {
 			reg = <0 0x96010000 0 0x5000>;
 			no-map;
 		};
 
-		gpu_mem: memory@96015000 {
+		gpu_mem: gpu@96015000 {
 			reg = <0 0x96015000 0 0x2000>;
 			no-map;
 		};
 
-		fb_mem: memory@9c000000 {
+		fb_mem: framebuffer@9c000000 {
 			reg = <0 0x9c000000 0 0x2300000>;
 			no-map;
 		};

@@ -41,6 +41,7 @@ jobs:
         run: |
           chmod +x scripts/sync-overlay.sh
           ./scripts/sync-overlay.sh
+          # Must not run inject-sirius-dts.sh: that rebuilds the kernel.
 
       - name: Build device-xiaomi-sirius
         run: |
