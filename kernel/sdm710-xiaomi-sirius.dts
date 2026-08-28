@@ -11,12 +11,17 @@
  * charger. The shared sdm670-mainline tree has no SMB1355 driver;
  * do not invent a node for it.
  *
- * Do not enable Wi-Fi, display, or remoteproc on this revision.
+ * Display: simple-framebuffer only. This unit's panel is Samsung
+ * EA8074 1080x2244. The shared kernel has EA8076, not EA8074 —
+ * do not bind samsung,ea8076. DRM/DSI stays off.
+ *
+ * Do not enable Wi-Fi or remoteproc on this revision.
  */
 
 /dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
 #include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
 #include <dt-bindings/power/qcom-rpmpd.h>
 #include <dt-bindings/usb/pd.h>
@@ -47,6 +52,22 @@
 
 	chosen {
 		stdout-path = "serial0:115200n8";
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		/* Live Android 2026-08-28: Physical size 1080x2244.
+		 * Only useful if firmware left a splash in fb_mem.
+		 * Keep console on serial0 — do not switch stdout here.
+		 */
+		framebuffer: framebuffer@9c000000 {
+			compatible = "simple-framebuffer";
+			reg = <0 0x9c000000 0 (1080 * 2244 * 4)>;
+			width = <1080>;
+			height = <2244>;
+			stride = <(1080 * 4)>;
+			format = "a8r8g8b8";
+		};
 	};
 
 	/* Live Android sysfs 2026-08-28: charge_full_design=3120000,
@@ -286,5 +307,14 @@
 };
 
 &pm660_rradc {
+	status = "okay";
+};
+
+&pon_pwrkey {
+	status = "okay";
+};
+
+&pon_resin {
+	linux,code = <KEY_VOLUMEDOWN>;
 	status = "okay";
 };
