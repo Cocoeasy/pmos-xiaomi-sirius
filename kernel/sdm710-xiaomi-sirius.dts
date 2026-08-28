@@ -3,8 +3,13 @@
  * Xiaomi Mi 8 SE (sirius / xmsirius), SDM710.
  *
  * First board pass: reserved-memory from this unit's live Android DT
- * (2026-08-28), debug UART at 0xA90000, USB2 gadget on a600000.dwc3.
- * Type-C / PM660 PD-PHY is not wired yet — no pyxis USB-ID GPIO 38.
+ * (2026-08-28), debug UART at 0xA90000, USB2 gadget on a600000.dwc3,
+ * PM660 charger + fuel gauge. Type-C / PM660 PD-PHY is not wired yet
+ * — no pyxis USB-ID GPIO 38.
+ *
+ * SMB1355 sits on i2c@a88000 (mainline i2c10) as the Android parallel
+ * charger. The shared sdm670-mainline tree has no SMB1355 driver;
+ * do not invent a node for it.
  *
  * Do not enable Wi-Fi, display, or remoteproc on this revision.
  */
@@ -41,6 +46,17 @@
 
 	chosen {
 		stdout-path = "serial0:115200n8";
+	};
+
+	/* Live Android sysfs 2026-08-28: charge_full_design=3120000,
+	 * voltage_max=4400000, bms BATTERY_TYPE=e2_atl, Li-poly.
+	 * Fuel-gauge cutoff in the live DT is 3400 mV.
+	 */
+	battery: battery {
+		compatible = "simple-battery";
+		voltage-min-design-microvolt = <3400000>;
+		voltage-max-design-microvolt = <4400000>;
+		charge-full-design-microamp-hours = <3120000>;
 	};
 
 	vph_pwr: vph-pwr-regulator {
@@ -226,4 +242,22 @@
 	vdd-supply = <&vreg_l1b_0p925>;
 	vdda-pll-supply = <&vreg_l10a_1p8>;
 	vdda-phy-dpdm-supply = <&vreg_l7b_3p125>;
+};
+
+/* Mainline qcom,pm660-charger / qcom,pmi8998-fg. Do not copy
+ * Android qpnp-smb2 properties (fcc-max-ua and friends).
+ */
+&pm660_charger {
+	monitored-battery = <&battery>;
+	status = "okay";
+};
+
+&pm660_fg {
+	monitored-battery = <&battery>;
+	power-supplies = <&pm660_charger>;
+	status = "okay";
+};
+
+&pm660_rradc {
+	status = "okay";
 };

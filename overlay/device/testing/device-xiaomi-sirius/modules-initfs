@@ -1,6 +1,8 @@
-# Initramfs modules for USB gadget bring-up. Touch comes later.
+# Initramfs modules for USB gadget and PM660 charge bring-up.
 i2c_qcom_geni
 gpi
 dwc3
 dwc3_qcom
 phy_qcom_qusb2
+qcom_pmi8998_charger
+qcom_fg

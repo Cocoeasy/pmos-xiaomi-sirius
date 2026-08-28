@@ -13,7 +13,7 @@ Do not commit dump files. They include radio identifiers.
 | `qcom,board-id` | `0x00000020` | | |
 | 屏幕 | **Samsung EA8074**（`msm_drm.dsi_display0=dsi_ss_ea8074_fhd_cmd_display:config2`） | DT 里还有 EA8076 等未激活节点 | DRM |
 | 触控 | **ST FTS** `st,fts` @ `i2c 0xa84000` addr 0x49，固件 `st_fts_v521.ftb` | 不要用 pyxis 的 `edt_ft5x06` | `modules-initfs` |
-| 充电 | PM660 `qpnp-smb2` + **SMB1355** + `qpnp,fg` | dmesg：满电可充，`charge_done` | P5 |
+| 充电 | PM660 `qpnp-smb2` + 并联 **SMB1355**（`a88000.i2c` = 主线 `i2c10`）+ `qpnp,fg` | 本机 2026-08-28：`charge_full_design=3120000`，`voltage_max=4400000`，`bms` 类型 `e2_atl`，电量计截止 3400 mV，`parallel` 的 `model_name=smb1355`。主线只开 `&pm660_charger` / `&pm660_fg` / `&pm660_rradc`；共享内核没有 SMB1355 驱动，设备树里不编造该芯片节点 | 设备树已写 PM660；SMB1355 仍不能用 |
 | USB | **`a600000.dwc3`**，安卓限 USB2（`maximum-speed = high-speed`），Type-C + PM660 `usb-pdphy@1700` | **没有** pyxis 那种 TLMM GPIO 38 USB-ID | `&usb_1` / `&usb_1_dwc3` `dr_mode = peripheral`，未接 extcon |
 | 串口 | `ttyMSM0,115200n8`，earlycon `msm_geni_serial,0xA90000` | 主线节点是 `uart12`（`serial@a90000`），不是 pyxis 的 uart6@898000 | `&uart12` + cmdline |
 | Wi‑Fi 驱动上报 | **`HW:WCN3998`** `FW:2.0.1.13.149.0` `vendor.wlan.driver.version=5.2.03.32Z` | DT 节点名叫 `bt_wcn3990` / `wcn3990`（399x 一族） | `&wifi` + ath10k_snoc |
