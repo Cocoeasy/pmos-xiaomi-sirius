@@ -28,6 +28,8 @@ Reboot if asked, then open Ubuntu and clone/copy this repo to a Linux path (not 
 
 That is milestone 1: the **device package** compiles against current pmaports.
 
+Full phase list, exit criteria, and Wi-Fi order: [`PLAN.md`](PLAN.md).
+
 ## Later milestones
 
 | Step | Command / work |

@@ -12,6 +12,8 @@ GitHub Actions (public repo, free minutes) builds **`device-xiaomi-sirius` only*
 
 Download the apk from the workflow **Artifacts** tab after a green run.
 
+Roadmap and exit criteria: [`docs/PLAN.md`](docs/PLAN.md). A green device apk is phase 0 only.
+
 ## What “latest” means
 
 - **pmbootstrap**: git `master`
@@ -27,6 +29,7 @@ overlay/device/testing/device-xiaomi-sirius/
 overlay/device/testing/firmware-xiaomi-sirius/   # empty on purpose
 kernel/sdm710-xiaomi-sirius.dts
 .github/workflows/device-package.yml
+docs/PLAN.md
 docs/BUILD.md
 docs/HARDWARE.md
 ```
