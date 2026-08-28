@@ -1,4 +1,6 @@
-# Minimal initramfs modules. Replace the touch driver after the
-# panel/touch IC is identified from this phone's Android DT.
+# Initramfs modules for USB gadget bring-up. Touch comes later.
 i2c_qcom_geni
 gpi
+dwc3
+dwc3_qcom
+phy_qcom_qusb2

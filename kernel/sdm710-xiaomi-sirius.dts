@@ -1,21 +1,241 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Xiaomi Mi 8 SE (sirius) — starting stub.
+ * Xiaomi Mi 8 SE (sirius / xmsirius), SDM710.
  *
- * Copy board nodes from this phone's Android DT / pyxis, then enable
- * regulators, USB gadget, charger, and WCN3990. Do not flash this
- * stub and expect Wi-Fi.
+ * First board pass: reserved-memory from this unit's live Android DT
+ * (2026-08-28), debug UART at 0xA90000, USB2 gadget on a600000.dwc3.
+ * Type-C / PM660 PD-PHY is not wired yet — no pyxis USB-ID GPIO 38.
  *
- * After editing, regenerate the kernel patch against the sdm670-mainline
- * tag used by linux-postmarketos-qcom-sdm670 in pmaports (currently
- * sdm670-v6.18.5) and add the file to arch/arm64/boot/dts/qcom/Makefile.
+ * Do not enable Wi-Fi, display, or remoteproc on this revision.
  */
+
 /dts-v1/;
 
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
+#include <dt-bindings/power/qcom-rpmpd.h>
 #include "sdm710.dtsi"
+#include "pm660.dtsi"
+#include "pm660l.dtsi"
+
+/delete-node/ &xbl_mem;
+/delete-node/ &wlan_msa_mem;
+/delete-node/ &cdsp_mem;
+/delete-node/ &mba_region;
+/delete-node/ &adsp_mem;
+/delete-node/ &ipa_fw_mem;
+/delete-node/ &ipa_gsi_mem;
+/delete-node/ &gpu_mem;
+/delete-node/ &rmtfs_mem;
 
 / {
 	model = "Xiaomi Mi 8 SE";
 	compatible = "xiaomi,sirius", "qcom,sdm710";
+	qcom,msm-id = <0x168 0>;
+	qcom,board-id = <0x20 0>;
 	chassis-type = "handset";
+
+	aliases {
+		serial0 = &uart12;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	vph_pwr: vph-pwr-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "vph_pwr";
+		regulator-min-microvolt = <3312000>;
+		regulator-max-microvolt = <3312000>;
+		regulator-always-on;
+		regulator-boot-on;
+	};
+
+	/* Parent of PM660L L1 / USB PHY vdd. Same PMIC family as pyxis. */
+	vreg_s2b_1p05: vreg-s2b-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "vreg_s2b";
+		regulator-min-microvolt = <1050000>;
+		regulator-max-microvolt = <1050000>;
+	};
+
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		/* Addresses and sizes from this phone's live DT. */
+		hyp_mem: memory@85700000 {
+			reg = <0 0x85700000 0 0x600000>;
+			no-map;
+		};
+
+		xbl_mem: memory@85e00000 {
+			reg = <0 0x85e00000 0 0x1c0000>;
+			no-map;
+		};
+
+		removed_region: memory@85fc0000 {
+			reg = <0 0x85fc0000 0 0x2f40000>;
+			no-map;
+		};
+
+		camera_mem: memory@8ab00000 {
+			reg = <0 0x8ab00000 0 0x500000>;
+			no-map;
+		};
+
+		modem_mem: memory@8b000000 {
+			reg = <0 0x8b000000 0 0x7e00000>;
+			no-map;
+		};
+
+		wlan_msa_mem: memory@93300000 {
+			reg = <0 0x93300000 0 0x100000>;
+			no-map;
+		};
+
+		cdsp_mem: memory@93400000 {
+			reg = <0 0x93400000 0 0x800000>;
+			no-map;
+		};
+
+		mba_region: memory@93c00000 {
+			reg = <0 0x93c00000 0 0x200000>;
+			no-map;
+		};
+
+		adsp_mem: memory@93e00000 {
+			reg = <0 0x93e00000 0 0x2200000>;
+			no-map;
+		};
+
+		ipa_fw_mem: memory@96000000 {
+			reg = <0 0x96000000 0 0x10000>;
+			no-map;
+		};
+
+		ipa_gsi_mem: memory@96010000 {
+			reg = <0 0x96010000 0 0x5000>;
+			no-map;
+		};
+
+		gpu_mem: memory@96015000 {
+			reg = <0 0x96015000 0 0x2000>;
+			no-map;
+		};
+
+		fb_mem: memory@9c000000 {
+			reg = <0 0x9c000000 0 0x2300000>;
+			no-map;
+		};
+	};
+};
+
+/* RPMH rails needed so the USB PHY supplies exist. Voltages follow
+ * the shared PM660 / PM660L map used on pyxis; unused consumers stay off.
+ */
+&apps_rsc {
+	regulators-0 {
+		compatible = "qcom,pm660-rpmh-regulators";
+		qcom,pmic-id = "a";
+
+		vdd-s1-supply = <&vph_pwr>;
+		vdd-s2-supply = <&vph_pwr>;
+		vdd-s3-supply = <&vph_pwr>;
+		vdd-s4-supply = <&vph_pwr>;
+		vdd-s5-supply = <&vph_pwr>;
+		vdd-s6-supply = <&vph_pwr>;
+
+		vdd-l1-l6-l7-supply = <&vreg_s6a_0p87>;
+		vdd-l2-l3-supply = <&vreg_s2b_1p05>;
+		vdd-l5-supply = <&vreg_s2b_1p05>;
+		vdd-l8-l9-l10-l11-l12-l13-l14-supply = <&vreg_s4a_2p04>;
+		vdd-l15-l16-l17-l18-l19-supply = <&vreg_bob>;
+
+		vreg_s4a_2p04: smps4 {
+			regulator-min-microvolt = <1808000>;
+			regulator-max-microvolt = <2040000>;
+			regulator-enable-ramp-delay = <200>;
+		};
+
+		vreg_s6a_0p87: smps6 {
+			regulator-min-microvolt = <1224000>;
+			regulator-max-microvolt = <1352000>;
+			regulator-enable-ramp-delay = <150>;
+		};
+
+		vreg_l10a_1p8: ldo10 {
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+			regulator-enable-ramp-delay = <250>;
+		};
+	};
+
+	regulators-1 {
+		compatible = "qcom,pm660l-rpmh-regulators";
+		qcom,pmic-id = "b";
+
+		vdd-s1-supply = <&vph_pwr>;
+		vdd-s2-supply = <&vph_pwr>;
+		vdd-s3-s4-supply = <&vph_pwr>;
+		vdd-s5-supply = <&vph_pwr>;
+
+		vdd-l1-l9-l10-supply = <&vreg_s2b_1p05>;
+		vdd-l2-supply = <&vreg_bob>;
+		vdd-l3-l5-l7-l8-supply = <&vreg_bob>;
+		vdd-l4-l6-supply = <&vreg_bob>;
+		vdd-bob-supply = <&vph_pwr>;
+
+		vreg_l1b_0p925: ldo1 {
+			regulator-min-microvolt = <880000>;
+			regulator-max-microvolt = <900000>;
+			regulator-enable-ramp-delay = <250>;
+		};
+
+		vreg_l7b_3p125: ldo7 {
+			regulator-min-microvolt = <3088000>;
+			regulator-max-microvolt = <3100000>;
+			regulator-enable-ramp-delay = <250>;
+		};
+
+		vreg_bob: bob {
+			regulator-min-microvolt = <3296000>;
+			regulator-max-microvolt = <3328000>;
+			regulator-enable-ramp-delay = <500>;
+		};
+	};
+};
+
+&qupv3_id_1 {
+	status = "okay";
+};
+
+/* earlycon=msm_geni_serial,0xA90000 on this unit */
+&uart12 {
+	status = "okay";
+};
+
+/* USB2 only — Android DT sets dwc3 maximum-speed = high-speed. */
+&usb_1 {
+	status = "okay";
+	qcom,select-utmi-as-pipe-clk;
+};
+
+&usb_1_dwc3 {
+	dr_mode = "peripheral";
+	phys = <&usb_1_hsphy>;
+	phy-names = "usb2-phy";
+	maximum-speed = "high-speed";
+
+	/delete-property/ snps,dis_u2_susphy_quirk;
+	/delete-property/ snps,dis_enblslpm_quirk;
+};
+
+&usb_1_hsphy {
+	status = "okay";
+	vdd-supply = <&vreg_l1b_0p925>;
+	vdda-pll-supply = <&vreg_l10a_1p8>;
+	vdda-phy-dpdm-supply = <&vreg_l7b_3p125>;
 };

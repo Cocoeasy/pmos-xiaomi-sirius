@@ -13,7 +13,7 @@ pyxis is added as a patch on that shared kernel. Sirius should be the same: one 
 - **sirius-dtb**: `scripts/build-sirius-dtb.sh` against the tag pinned by pmaports. Artifact is `sdm710-xiaomi-sirius.dtb`.
 - **kernel**: `scripts/inject-sirius-dts.sh` copies the dts into `linux-postmarketos-qcom-sdm670`, then `pmbootstrap build` that package.
 
-The stub dts is enough to *compile*. It is not enough to *boot the phone*.
+`sdm710-xiaomi-sirius.dts` now has this-unit reserved-memory, `uart12` at 0xA90000, and USB2 gadget. It still has no charger, display, or Wi-Fi. Do not flash a boot image until USB actually enumerates on the phone.
 
 ## Local compile (WSL / Linux)
 
