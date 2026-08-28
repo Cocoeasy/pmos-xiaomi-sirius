@@ -1,0 +1,4 @@
+# Minimal initramfs modules. Replace the touch driver after the
+# panel/touch IC is identified from this phone's Android DT.
+i2c_qcom_geni
+gpi

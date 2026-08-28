@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Xiaomi Mi 8 SE (sirius) — starting stub.
+ *
+ * Copy board nodes from this phone's Android DT / pyxis, then enable
+ * regulators, USB gadget, charger, and WCN3990. Do not flash this
+ * stub and expect Wi-Fi.
+ *
+ * After editing, regenerate the kernel patch against the sdm670-mainline
+ * tag used by linux-postmarketos-qcom-sdm670 in pmaports (currently
+ * sdm670-v6.18.5) and add the file to arch/arm64/boot/dts/qcom/Makefile.
+ */
+/dts-v1/;
+
+#include "sdm710.dtsi"
+
+/ {
+	model = "Xiaomi Mi 8 SE";
+	compatible = "xiaomi,sirius", "qcom,sdm710";
+	chassis-type = "handset";
+};

@@ -1,0 +1,39 @@
+# Reference: device/testing/device-xiaomi-pyxis
+# First milestone: package builds. firmware-xiaomi-sirius is optional until blobs exist.
+pkgname=device-xiaomi-sirius
+pkgdesc="Xiaomi Mi 8 SE"
+pkgver=0
+pkgrel=0
+url="https://postmarketos.org"
+license="MIT"
+arch="aarch64"
+options="!check !archcheck"
+depends="
+	linux-firmware-ath10k
+	linux-firmware-qca
+	linux-firmware-qcom
+	linux-postmarketos-qcom-sdm670
+	mkbootimg
+	postmarketos-base
+	soc-qcom
+"
+makedepends="devicepkg-dev"
+source="
+	deviceinfo
+	kernel-cmdline.conf
+	modules-initfs
+"
+
+build() {
+	devicepkg_build $startdir $pkgname
+}
+
+package() {
+	devicepkg_package $startdir $pkgname
+}
+
+sha512sums="
+placeholder_run_pmbootstrap_checksum  deviceinfo
+placeholder_run_pmbootstrap_checksum  kernel-cmdline.conf
+placeholder_run_pmbootstrap_checksum  modules-initfs
+"

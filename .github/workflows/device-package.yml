@@ -1,0 +1,58 @@
+# Public-repo CI: build device-xiaomi-sirius against pmaports edge.
+# Does not compile the SDM670 kernel and does not produce a flashable image.
+name: device-package
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: device-package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pmbootstrap from git
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git python3 openssl
+          git clone --depth=1 https://gitlab.postmarketos.org/postmarketOS/pmbootstrap.git
+          mkdir -p "$HOME/.local/bin"
+          ln -s "$PWD/pmbootstrap/pmbootstrap.py" "$HOME/.local/bin/pmbootstrap"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/pmbootstrap" --version
+
+      - name: Init pmaports (edge, existing device)
+        run: |
+          # Clone pmaports without interactive new-device prompts.
+          yes "" | pmbootstrap init --shallow-initial-clone || true
+          pmbootstrap config ui none
+          pmbootstrap config device xiaomi-pyxis
+          test -d "$HOME/.local/var/pmbootstrap/cache_git/pmaports/device"
+
+      - name: Sync sirius overlay
+        run: |
+          chmod +x scripts/sync-overlay.sh
+          ./scripts/sync-overlay.sh
+
+      - name: Build device-xiaomi-sirius
+        run: |
+          pmbootstrap config device xiaomi-sirius
+          pmbootstrap checksum device-xiaomi-sirius
+          pmbootstrap build device-xiaomi-sirius
+
+      - name: Upload apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: device-xiaomi-sirius
+          path: |
+            ~/.local/var/pmbootstrap/packages/**/device-xiaomi-sirius-*.apk
+          if-no-files-found: error
+          retention-days: 14

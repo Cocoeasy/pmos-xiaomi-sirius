@@ -1,0 +1,29 @@
+# Firmware package is filled after extracting blobs from THIS phone.
+# Do not point at pyxis / generic linux-firmware as the final RF cal.
+#
+# Expected local layout after dump (see docs/HARDWARE.md):
+#   hardware/firmware/dsp_fw/wlanmdsp.mbn
+#   hardware/firmware/calib_data/bdwlan.bin
+#
+# Build only on Linux/WSL after blobs exist:
+#   pmbootstrap checksum firmware-xiaomi-sirius
+#   pmbootstrap build firmware-xiaomi-sirius
+pkgname=firmware-xiaomi-sirius
+pkgver=0
+pkgrel=0
+pkgdesc="WIP proprietary firmware for Xiaomi Mi 8 SE (sirius)"
+url="https://postmarketos.org"
+arch="aarch64"
+license="proprietary"
+options="!check !archcheck !strip !tracedeps textrels pmb:cross-native"
+# source= is added after blobs are vendored or hosted. Empty on purpose.
+source=""
+
+package() {
+	mkdir -p "$pkgdir"/lib/firmware/qcom/sdm710/sirius
+	# install extracted mbn/zst and board-2.bin here
+	install -Dm644 /dev/null "$pkgdir"/lib/firmware/qcom/sdm710/sirius/README
+}
+
+sha512sums="
+"

@@ -1,0 +1,7 @@
+* text=auto
+*.sh text eol=lf
+*.dts text eol=lf
+APKBUILD text eol=lf
+deviceinfo text eol=lf
+modules-initfs text eol=lf
+*.conf text eol=lf

@@ -1,0 +1,21 @@
+# pmbootstrap / local clones (created on Linux or WSL)
+.work/
+pmbootstrap/
+pmaports/
+
+# Phone dumps and proprietary blobs — never commit
+hardware/dump/
+hardware/firmware/
+*.mbn
+*.mbn.zst
+*.bin
+*.elf
+*.img
+*.zip
+bdwlan*
+wlanmdsp*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
