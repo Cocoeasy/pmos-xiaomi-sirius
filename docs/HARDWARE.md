@@ -1,6 +1,12 @@
 # Hardware dump (do this while Android still boots)
 
-Copy these off the phone with `adb` / root. Put raw dumps in `hardware/dump/` (gitignored).
+On Windows, with the phone authorized:
+
+```powershell
+powershell -File scripts/dump-from-phone.ps1
+```
+
+Put raw dumps in `hardware/dump/` (gitignored). Fill `hardware/NOTES.md` after a successful dump.
 
 ```text
 /proc/cmdline
