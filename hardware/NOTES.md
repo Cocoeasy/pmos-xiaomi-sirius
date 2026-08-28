@@ -1,32 +1,35 @@
 # Hardware notes — Xiaomi Mi 8 SE (`sirius` / `xmsirius`)
 
-**This-unit dump:** not yet. 2026-08-28 开工时电脑上没有授权的 adb/fastboot 设备。  
-Windows 里能看到历史「MI 8 SE」节点，当前在位的 USB 不是这台手机。
+**This-unit dump:** 2026-08-28, adb `device:sirius` (unlocked, `verifiedbootstate=orange`).  
+Raw files: `hardware/dump/20260828-145534/` (gitignored). No root (`su` missing): `/proc/cmdline` and `/vendor/firmware_mnt` unreadable; cmdline recovered from live DT `chosen/bootargs`.
 
-跑 `scripts/dump-from-phone.ps1` 之后，把「本机值」列填上。没填之前，下面全部来自 **LineageOS `android_kernel_xiaomi_sdm710` lineage-20** 的 GPL 设备树，只能当对照。
+Do not commit dump files. They include radio identifiers.
 
-参考文件（已镜像到本仓库）：
-
-- `hardware/reference/android-dts/sirius-sdm710.dtsi`
-- `hardware/reference/android-dts/xiaomi-sdm710-common.dtsi`
-- 上游：https://github.com/LineageOS/android_kernel_xiaomi_sdm710
-
-Wi‑Fi（WCN3990）不在这两份板级 dtsi 里，在 SDM670/710 SoC 公共树 + vendor 固件。
-
-| 项 | 对照值（Lineage，未用本机验证） | 本机值 | 写入 |
+| 项 | 本机值（这台） | 对照 / 备注 | 写入 |
 |---|---|---|---|
-| 对外型号 | Mi 8 SE / M1805E2A | | |
-| `ro.product.device` | sirius / xmsirius | | getprop |
-| SoC | SDM710 | | |
-| 屏幕 | 1080×2244 AMOLED | | deviceinfo 已写 |
-| panel | `dsi_ss_fhd_ea8074_cmd`（Samsung EA8074） | | DRM（P4 后） |
-| reset / TE | GPIO 75 / GPIO 10 | | |
-| 触控 | ST `fts@49`（`st,fts`），IRQ 125，RST 99 | | `modules-initfs` 先别抄 pyxis 的 `edt_ft5x06` |
-| 充电 | `&pm660_charger` + `&smb1355`（QC 并联） | | P5 |
-| 电量计 | `&pm660_fg`，3120 mAh ATL/Coslight | | P5 |
-| USB | `dwc3@a600000`，high-speed | | 调试网；cmdline 里常见 `a600000.dwc3` |
-| Wi‑Fi | 预期 WCN3990 / `ath10k_snoc` | | `&wifi` + 本机 `wlanmdsp`/`bdwlan` |
-| 音量+ | `pm660l_gpios 7` | | 可选 |
-| 指纹 | FPC1020 或 Goodix（GPIO 80/121） | | 非 MVP |
+| `ro.product.device` | `sirius` | 不是 xmsirius 字符串 | deviceinfo 已用 `xiaomi-sirius` |
+| SoC in DT | `qcom,sdm670-mtp` / model 写 SDM670 + Sirius | 710 在安卓树里常跟 670 一套 | 主线仍用 `sdm710` / `sdm710.dtsi` |
+| `qcom,msm-id` | `0x00000168` (360) | SDM670 编号 | |
+| `qcom,board-id` | `0x00000020` | | |
+| 屏幕 | **Samsung EA8074**（`msm_drm.dsi_display0=dsi_ss_ea8074_fhd_cmd_display:config2`） | DT 里还有 EA8076 等未激活节点 | DRM |
+| 触控 | **ST FTS** `st,fts` @ `i2c 0xa84000` addr 0x49，固件 `st_fts_v521.ftb` | 不要用 pyxis 的 `edt_ft5x06` | `modules-initfs` |
+| 充电 | PM660 `qpnp-smb2` + **SMB1355** + `qpnp,fg` | dmesg：满电可充，`charge_done` | P5 |
+| USB | **`a600000.dwc3`** | 与 getprop / bootargs 一致 | 调试网 |
+| 串口 | `ttyMSM0,115200n8`，earlycon `msm_geni_serial,0xA90000` | 2020 帖写的 0xA84000 以本机为准 | deviceinfo / cmdline |
+| Wi‑Fi 驱动上报 | **`HW:WCN3998`** `FW:2.0.1.13.149.0` `vendor.wlan.driver.version=5.2.03.32Z` | DT 节点名叫 `bt_wcn3990` / `wcn3990`（399x 一族） | `&wifi` + ath10k_snoc |
+| Wi‑Fi 用户态文件 | `/vendor/etc/wifi/WCNSS_qcom_cfg.ini` | `wlan_mac.bin` 链接的 persist 文件不存在 | |
+| `wlanmdsp` / `bdwlan` | **未导出**（`firmware_mnt` 无权限） | 公开 dump 指纹同系列：`V12.5.1.0.QEBCNXM` | 有 root 或从 fastboot 包再抽 |
+| SELinux | permissive | 已解锁 | |
+| 系统 | Android 13 / MIUI V140 移植味；boot 指纹仍带 `QKQ1.190828.002` | 不影响硬件 | |
 
-`modules-initfs` 里现在的 `edt_ft5x06` 是抄 pyxis 的，和这台 ST FTS **对不上**。等本机 dump 确认后再改，现在不要为了触控乱加驱动。
+Live `chosen/bootargs`（本机，已去掉隐私字段后的骨架）：
+
+```text
+console=ttyMSM0,115200n8 earlycon=msm_geni_serial,0xA90000
+androidboot.hardware=qcom androidboot.console=ttyMSM0
+androidboot.usbcontroller=a600000.dwc3
+msm_drm.dsi_display0=dsi_ss_ea8074_fhd_cmd_display:config2
+androidboot.hwc=CN androidboot.hwversion=2.3.0
+```
+
+参考安卓树（GPL，非本机 live 展开）：`hardware/reference/android-dts/`。

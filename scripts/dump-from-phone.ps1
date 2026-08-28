@@ -1,10 +1,11 @@
-# Phase 1: pull DT / props / logs / firmware names from a booted Android 8 SE.
-# Blobs stay under hardware/dump (gitignored). Run from repo root.
+# Phase 1: pull DT / props / logs from a booted Android 8 SE.
+# Windows cannot adb-pull /sys/firmware/devicetree (node names vs directories).
+# Blobs stay under hardware/dump (gitignored).
 param(
     [string]$Adb = "D:\Android\platform-tools\adb.exe"
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 if (-not (Test-Path $Adb)) {
     $found = Get-Command adb -ErrorAction SilentlyContinue
@@ -27,27 +28,14 @@ Write-Host "Dumping to $out"
 & $Adb shell getprop | Out-File -Encoding utf8 "$out\getprop.txt"
 & $Adb shell getprop ro.product.device | Out-File -Encoding utf8 "$out\ro.product.device.txt"
 & $Adb shell getprop ro.boot.hardware | Out-File -Encoding utf8 "$out\ro.boot.hardware.txt"
-& $Adb shell cat /proc/cmdline | Out-File -Encoding utf8 "$out\cmdline.txt"
+& $Adb shell getprop vendor.wlan.firmware.version | Out-File -Encoding utf8 "$out\wlan-fw.txt"
+& $Adb shell "cat /proc/cmdline" 2>&1 | Out-File -Encoding utf8 "$out\cmdline-proc.txt"
 
-New-Item -ItemType Directory -Force -Path "$out\devicetree" | Out-Null
-& $Adb pull /sys/firmware/devicetree/base "$out\devicetree" 2>&1 | Out-File -Encoding utf8 "$out\pull-dt.log"
-
+& $Adb shell "tar czf /data/local/tmp/dt.tgz -C /sys/firmware/devicetree base"
+& $Adb pull /data/local/tmp/dt.tgz "$out\devicetree.tar.gz"
 & $Adb shell dmesg 2>&1 | Out-File -Encoding utf8 "$out\dmesg.txt"
-
-$search = @("wlanmdsp", "bdwlan", "mba.mbn", "modem.mbn", "adsp.mbn", "cdsp.mbn", "a615_zap")
-$findScript = 'for p in /vendor/firmware /vendor/firmware_mnt /firmware/image /vendor/firmware/wlan; do [ -d "$p" ] && find "$p" -type f 2>/dev/null; done'
-& $Adb shell $findScript 2>&1 | Out-File -Encoding utf8 "$out\firmware-list.txt"
-
-Get-Content "$out\firmware-list.txt" -ErrorAction SilentlyContinue |
-    Where-Object { $line = $_; $search | Where-Object { $line -match $_ } } |
-    ForEach-Object {
-        $remote = $_.Trim()
-        if ($remote -and $remote.StartsWith("/")) {
-            $name = Split-Path $remote -Leaf
-            Write-Host "pull $remote"
-            & $Adb pull $remote (Join-Path "$out\firmware-copy" $name) 2>&1 | Out-Null
-        }
-    }
+& $Adb shell "ls -la /vendor/firmware /vendor/firmware/wlan/qca_cld /vendor/etc/wifi" 2>&1 | Out-File -Encoding utf8 "$out\firmware-ls.txt"
+& $Adb pull /vendor/etc/wifi/WCNSS_qcom_cfg.ini "$out\firmware-copy\WCNSS_qcom_cfg.ini"
 
 Write-Host "Done. Do not git add hardware/dump/"
 Write-Host $out

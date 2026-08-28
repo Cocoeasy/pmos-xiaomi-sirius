@@ -62,7 +62,7 @@ SoC：Qualcomm SDM710
 | 产物 | `device-xiaomi-sirius-0-r0.apk` ≈ 2.8 KB | 只有 deviceinfo / cmdline / mkinitfs 列表 |
 | 内核编过 | **未做** | CI 故意不编 `linux-postmarketos-qcom-sdm670` |
 | `boot.img` / rootfs | **未做** | `pmbootstrap install` 未跑 |
-| 本机 DT / 固件转储 | **未做** | 安卓还在就能做，应立刻做 |
+| 本机 DT / 固件转储 | **部分完成** 2026-08-28 | live DT + dmesg + cmdline(bootargs)；`firmware_mnt` 无 root 未抽 |
 | WSL / 本机 Linux | **未装** | 编内核、出镜像必须有 |
 
 CI 里的 Node 20 提示来自旧版 `actions/*@v4`，与 apk 能否编过无关。已改为 `@v5`。
