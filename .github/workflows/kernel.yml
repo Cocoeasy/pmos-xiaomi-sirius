@@ -63,13 +63,17 @@ jobs:
           ./scripts/sync-overlay.sh
           ./scripts/inject-sirius-dts.sh
           pmbootstrap checksum linux-postmarketos-qcom-sdm670
-          pmbootstrap build linux-postmarketos-qcom-sdm670
+          pmbootstrap build --force linux-postmarketos-qcom-sdm670
 
       - name: Extract sirius dtb from apk
         run: |
           mkdir -p .work/kernel-apk
+          find "$HOME/.local/var/pmbootstrap/packages" -type f | sort
           apk=$(find "$HOME/.local/var/pmbootstrap/packages" -name 'linux-postmarketos-qcom-sdm670-*.apk' | head -n1)
-          test -n "$apk"
+          if [ -z "$apk" ]; then
+            echo "local kernel apk missing; build was skipped or wrote elsewhere" >&2
+            exit 1
+          fi
           cp "$apk" .work/kernel-apk/
           tar -tzf "$apk" | grep sdm710-xiaomi-sirius.dtb
           tar -xzf "$apk" -C .work/kernel-apk --wildcards '*sdm710-xiaomi-sirius.dtb'
