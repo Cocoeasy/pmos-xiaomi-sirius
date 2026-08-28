@@ -35,6 +35,11 @@ jobs:
 
       - uses: actions/checkout@v5
 
+      - name: Point default pmbootstrap work at the big disk
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/.pmbootstrap" "$HOME/.local/var"
+          ln -sfn "$GITHUB_WORKSPACE/.pmbootstrap" "$HOME/.local/var/pmbootstrap"
+
       - name: Install pmbootstrap from git
         run: |
           sudo apt-get update
@@ -45,33 +50,25 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           "$HOME/.local/bin/pmbootstrap" --version
 
-      - name: Init pmaports (edge) on the big workspace disk
-        env:
-          WORK: ${{ github.workspace }}/.pmbootstrap
+      - name: Init pmaports (edge)
         run: |
-          mkdir -p "$WORK"
-          yes "" | pmbootstrap --work "$WORK" init --shallow-initial-clone || true
-          pmbootstrap --work "$WORK" config ui none
-          pmbootstrap --work "$WORK" config device xiaomi-pyxis
-          test -d "$WORK/cache_git/pmaports/device"
+          yes "" | pmbootstrap init --shallow-initial-clone || true
+          pmbootstrap config ui none
+          pmbootstrap config device xiaomi-pyxis
+          test -d "$HOME/.local/var/pmbootstrap/cache_git/pmaports/device"
 
       - name: Inject sirius dts and build kernel
-        env:
-          WORK: ${{ github.workspace }}/.pmbootstrap
-          PMAPORTS: ${{ github.workspace }}/.pmbootstrap/cache_git/pmaports
         run: |
           chmod +x scripts/sync-overlay.sh scripts/inject-sirius-dts.sh
           ./scripts/sync-overlay.sh
           ./scripts/inject-sirius-dts.sh
-          pmbootstrap --work "$WORK" checksum linux-postmarketos-qcom-sdm670
-          pmbootstrap --work "$WORK" build linux-postmarketos-qcom-sdm670
+          pmbootstrap checksum linux-postmarketos-qcom-sdm670
+          pmbootstrap build linux-postmarketos-qcom-sdm670
 
       - name: Extract sirius dtb from apk
-        env:
-          WORK: ${{ github.workspace }}/.pmbootstrap
         run: |
           mkdir -p .work/kernel-apk
-          apk=$(find "$WORK/packages" -name 'linux-postmarketos-qcom-sdm670-*.apk' | head -n1)
+          apk=$(find "$HOME/.local/var/pmbootstrap/packages" -name 'linux-postmarketos-qcom-sdm670-*.apk' | head -n1)
           test -n "$apk"
           cp "$apk" .work/kernel-apk/
           tar -tzf "$apk" | grep sdm710-xiaomi-sirius.dtb
